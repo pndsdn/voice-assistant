@@ -60,6 +60,7 @@ wbb.register('chrome', None, wbb.BackgroundBrowser(r'C:\Program Files\Google'
                                                    r'\Chrome\Application'
                                                    r'\chrome.exe'))
 
+print(COMMANDS)
 morph = pymorphy2.MorphAnalyzer()
 while stream.is_active():
     try:
