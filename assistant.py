@@ -12,14 +12,7 @@ import pyaudio
 import PyQt5
 
 from config import SOUND_FOLDER, COMMANDS
-
-
-def form_request(ror, obj):
-    request = ''
-
-    print(q)
-    return request
-
+from sound import Sound
 
 def play_audio_callback(wave_path):
     wf = wave.open(wave_path, 'rb')
@@ -68,24 +61,43 @@ while stream.is_active():
         if recognizer.AcceptWaveform(data):
             ror = json.loads(recognizer.Result())["text"]
             try:
+
                 action = morph.normal_forms(ror.split()[0])[0] if len(morph.normal_forms(ror.split()[0])) == 1 else morph.normal_forms(ror.split()[0])[1]
-                action_object = ror[len(action)+1::]
+                action_object = ror[len(ror.split()[0])+1::]
 
                 if action in COMMANDS.keys():
-                    if action == "выключись":
+                    if action == "выключиться":
                         stream.stop_stream()
                         play_audio_callback(
                             f'{SOUND_FOLDER}bot-hanging-up.wav')
                         stream.start_stream()
                         break
 
-                    if action == "найди":
+                    if action == "найти":
                         action_object = "в интернете"
                         q = ror[ror.find(action_object)+len(action_object)+1::]
-                        wbb.get('chrome').open_new_tab(
-                            f'https://www.google.com/search?q={q}')
+                        # wbb.get('chrome').open_new_tab(
+                        #     f'https://www.google.com/search?q={q}')
+                        os.system(f"python -m webbrowser -t "
+                                  f"https://www.google.com/search?q={q}")
+
+                    if action_object == "звук":
+                        if action == "выключить":
+                            stream.stop_stream()
+                            play_audio_callback(f'{SOUND_FOLDER}'
+                                                f'{(COMMANDS[action][1])}')
+                            stream.start_stream()
+                            Sound.mute()
+
+                        if action == "включить":
+                            stream.stop_stream()
+                            play_audio_callback(f'{SOUND_FOLDER}'
+                                                f'{(COMMANDS[action][1])}')
+                            stream.start_stream()
+                            Sound.mute()
 
                     if action_object in COMMANDS[action][0].keys():
+                        #  попробовать реализовать функцию command_execution(act, obj)
                         os.system(COMMANDS[action][0][action_object])
 
                         stream.stop_stream()
