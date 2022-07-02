@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import subprocess
 import webbrowser as wbb
 import json
 import time
@@ -9,10 +8,11 @@ import pymorphy2
 import wave
 from vosk import Model, KaldiRecognizer
 import pyaudio
-import PyQt5
 
+from winsound.sound import Sound
 from config import SOUND_FOLDER, COMMANDS
-from sound import Sound
+from w2n import extractor
+
 
 def play_audio_callback(wave_path):
     wf = wave.open(wave_path, 'rb')
@@ -53,13 +53,14 @@ wbb.register('chrome', None, wbb.BackgroundBrowser(r'C:\Program Files\Google'
                                                    r'\Chrome\Application'
                                                    r'\chrome.exe'))
 
-print(COMMANDS)
 morph = pymorphy2.MorphAnalyzer()
+
 while stream.is_active():
     try:
         data = stream.read(4096)
         if recognizer.AcceptWaveform(data):
             ror = json.loads(recognizer.Result())["text"]
+            print(ror)
             try:
 
                 action = morph.normal_forms(ror.split()[0])[0] if len(morph.normal_forms(ror.split()[0])) == 1 else morph.normal_forms(ror.split()[0])[1]
@@ -95,6 +96,20 @@ while stream.is_active():
                                                 f'{(COMMANDS[action][1])}')
                             stream.start_stream()
                             Sound.mute()
+
+                    if action == "разделить":
+                        print("bitch")
+                        ext = extractor.NumberExtractor()
+                        num1 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[0]
+                        num2 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[1]
+                        print(ext.replace_groups(ror[len(ror.split()[0]) + 1:]))
+                        _frac = num1 / num2
+                        print(_frac)
+
+                        stream.stop_stream()
+                        play_audio_callback(f'{SOUND_FOLDER}'
+                                            f'{(COMMANDS[action][1])}')
+                        stream.start_stream()
 
                     if action_object in COMMANDS[action][0].keys():
                         #  попробовать реализовать функцию command_execution(act, obj)
