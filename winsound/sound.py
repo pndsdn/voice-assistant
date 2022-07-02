@@ -1,4 +1,4 @@
-from keyboard import Keyboard
+from winsound.keyboard import Keyboard
 
 
 class Sound:
