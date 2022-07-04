@@ -9,8 +9,6 @@ import pymorphy2
 import wave
 from vosk import Model, KaldiRecognizer
 import pyaudio
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from winsound.sound import Sound
 from w2n import extractor
@@ -150,30 +148,6 @@ class Assistant(object):
             print("Команда не распознана")
 
         return True
-
-
-class Window(QMainWindow):
-    def __init__(self):
-        super(Window, self).__init__()
-
-        self.setWindowTitle("Голосовой помощник")
-        self.setGeometry(100, 80, 400, 250)
-
-        self.header = QtWidgets.QLabel(self)
-        self.header.move(10, 10)
-        self.header.setText("Слушаю:")
-        self.header.adjustSize()
-
-        self.recognizing = QtWidgets.QLabel(self)
-        self.recognizing.move(30, 20)
-
-    def set_recognized_text(self, text):
-        self.recognizing.setText(text)
-        self.recognizing.adjustSize()
-
-    def winrec(self):
-        self.assistant = Assistant()
-        self.assistant.recognizing()
 
 
 def play_audio_callback(wave_path):
