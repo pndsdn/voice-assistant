@@ -10,35 +10,106 @@ from vosk import Model, KaldiRecognizer
 import pyaudio
 
 from winsound.sound import Sound
-from config import SOUND_FOLDER, COMMANDS
 from w2n import extractor
+
+SOUND_FOLDER = f'{os.path.join(os.path.dirname(__file__))}/replicas/'
+
+COMMANDS = {
+    "открыть": {
+        "диспетчер задач": ["taskmgr", "bot-task-manager.mp3"],
+        "панель управления": ["control panel", "bot-opening.wav"],
+        "проводник": ["explorer", "bot-opening.wav"]
+    },
+    "найти": {
+        "в интернете": ["", "bot-searching.wav"]
+    },
+    "выключить": {
+        "звук": ["", "bot-turning-off.wav"]
+    },
+    "включить": {
+        "звук": ["", "bot-turning-on.wav"]
+    },
+    "разделить": "bot-pull-out-calculator.wav",
+    "выключиться": "bot-pull-out-calculator.wav"
+}
 
 
 def play_audio_callback(wave_path):
     wf = wave.open(wave_path, 'rb')
 
-    # instantiate PyAudio (1)
     p = pyaudio.PyAudio()
 
     def callback(in_data, frame_count, time_info, status):
         data = wf.readframes(frame_count)
         return (data, pyaudio.paContinue)
 
-    # open stream (2)
     stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                     channels=wf.getnchannels(),
                     rate=wf.getframerate(),
                     output=True,
                     stream_callback=callback)
-    # read data
+
     stream.start_stream()
     while stream.is_active():
         time.sleep(0.1)
-    # stop stream (4)
+
     stream.stop_stream()
     stream.close()
-    # close PyAudio (5)
     p.terminate()
+
+
+def play_assistant_replica(act, obj):
+    stream.stop_stream()
+    play_audio_callback(f'{SOUND_FOLDER}'
+                        f'{(COMMANDS[act][obj][1])}')
+    stream.start_stream()
+
+
+def command_execution(text):
+    action = morph.normal_forms(text.split()[0])[0] if len(morph.normal_forms(text.split()[0])) == 1 else morph.normal_forms(ror.split()[0])[1]
+    action_object = text[len(text.split()[0]) + 1::]
+
+    if action in COMMANDS.keys():
+        if action == "выключиться":
+            stream.stop_stream()
+            play_audio_callback(f'{SOUND_FOLDER}bot-hanging-up.wav')
+            stream.start_stream()
+            return False
+
+        if action == "найти":
+            action_object = "в интернете"
+            q = ror[ror.find(action_object) + len(action_object) + 1::]
+            os.system(f"python -m webbrowser -t "
+                      f"https://www.google.com/search?q={q}")
+            play_assistant_replica(action, action_object)
+
+        if action == "выключить":
+            if action_object == "звук":
+                play_assistant_replica(action, action_object)
+
+                if not Sound.is_muted():
+                    Sound.mute()
+
+        if action == "включить":
+            if action_object == "звук":
+                if Sound.is_muted():
+                    Sound.mute()
+                    play_assistant_replica(action, action_object)
+
+        if action == "разделить":
+            ext = extractor.NumberExtractor()
+            num1 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[0]
+            num2 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[1]
+            _frac = num1 / num2
+            play_assistant_replica(action, action_object)
+
+        if action == "открыть":
+            os.system(COMMANDS[action][0][action_object])
+            play_assistant_replica(action, action_object)
+    else:
+        print("Команда не распознана")
+
+    return True
 
 
 model = Model('vosk-model-small-ru-0.22')
@@ -62,96 +133,13 @@ while stream.is_active():
             ror = json.loads(recognizer.Result())["text"]
             print(ror)
             try:
-
-                action = morph.normal_forms(ror.split()[0])[0] if len(morph.normal_forms(ror.split()[0])) == 1 else morph.normal_forms(ror.split()[0])[1]
-                action_object = ror[len(ror.split()[0])+1::]
-
-                if action in COMMANDS.keys():
-                    if action == "выключиться":
-                        stream.stop_stream()
-                        play_audio_callback(
-                            f'{SOUND_FOLDER}bot-hanging-up.wav')
-                        stream.start_stream()
-                        break
-
-                    if action == "найти":
-                        action_object = "в интернете"
-                        q = ror[ror.find(action_object)+len(action_object)+1::]
-                        # wbb.get('chrome').open_new_tab(
-                        #     f'https://www.google.com/search?q={q}')
-                        os.system(f"python -m webbrowser -t "
-                                  f"https://www.google.com/search?q={q}")
-
-                    if action_object == "звук":
-                        if action == "выключить":
-                            stream.stop_stream()
-                            play_audio_callback(f'{SOUND_FOLDER}'
-                                                f'{(COMMANDS[action][1])}')
-                            stream.start_stream()
-                            Sound.mute()
-
-                        if action == "включить":
-                            stream.stop_stream()
-                            play_audio_callback(f'{SOUND_FOLDER}'
-                                                f'{(COMMANDS[action][1])}')
-                            stream.start_stream()
-                            Sound.mute()
-
-                    if action == "разделить":
-                        print("bitch")
-                        ext = extractor.NumberExtractor()
-                        num1 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[0]
-                        num2 = ext.replace_groups(ror[len(ror.split()[0]) + 1:])[1]
-                        print(ext.replace_groups(ror[len(ror.split()[0]) + 1:]))
-                        _frac = num1 / num2
-                        print(_frac)
-
-                        stream.stop_stream()
-                        play_audio_callback(f'{SOUND_FOLDER}'
-                                            f'{(COMMANDS[action][1])}')
-                        stream.start_stream()
-
-                    if action_object in COMMANDS[action][0].keys():
-                        #  попробовать реализовать функцию command_execution(act, obj)
-                        os.system(COMMANDS[action][0][action_object])
-
-                        stream.stop_stream()
-                        play_audio_callback(f'{SOUND_FOLDER}'
-                                            f'{(COMMANDS[action][1])}')
-                        stream.start_stream()
+                if command_execution(ror):
+                    pass
                 else:
-                    print("Команда не распознана")
+                    break
 
             except IndexError:
                 pass
-
-            # for command in commands.keys():
-            #     if command in result_of_recognizing:
-            #         if command == "открой диспетчер задач":
-            #             stream.stop_stream()
-            #             play_audio_callback(f'{SOUND_FOLDER}bot-opening.wav')
-            #             stream.start_stream()
-            #             os.system(commands[command])
-            #
-            #         elif command == "найди в интернете":
-            #             q = result_of_recognizing[len(command)+1::]
-            #             stream.stop_stream()
-            #             wbb.get('chrome').open_new_tab(
-            #                 f'https://www.google.com/search?q={q}')
-            #             play_audio_callback(f'{SOUND_FOLDER}bot-searching.wav')
-            #             stream.start_stream()
-            #
-            #         elif command == "выключи звук":
-            #             stream.stop_stream()
-            #             play_audio_callback(
-            #                 f'{SOUND_FOLDER}bot-turning-off.wav')
-            #             stream.start_stream()
-            #
-            #         elif command == "включи звук":
-            #             stream.stop_stream()
-            #             play_audio_callback(
-            #                 f'{SOUND_FOLDER}bot-turning-on.wav')
-            #             stream.start_stream()
 
     except KeyboardInterrupt:
         stream.stop_stream()
