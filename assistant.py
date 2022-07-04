@@ -3,11 +3,14 @@ import os
 import webbrowser as wbb
 import json
 import time
+import sys
 
 import pymorphy2
 import wave
 from vosk import Model, KaldiRecognizer
 import pyaudio
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from winsound.sound import Sound
 from w2n import extractor
@@ -112,37 +115,38 @@ def command_execution(text):
     return True
 
 
-model = Model('vosk-model-small-ru-0.22')
-recognizer = KaldiRecognizer(model, 16000)
+if __name__ == "__main__":
+    model = Model('vosk-model-small-ru-0.22')
+    recognizer = KaldiRecognizer(model, 16000)
 
-cap = pyaudio.PyAudio()
-stream = cap.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True,
-                  frames_per_buffer=8192)
-stream.start_stream()
+    cap = pyaudio.PyAudio()
+    stream = cap.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True,
+                      frames_per_buffer=8192)
+    stream.start_stream()
 
-wbb.register('chrome', None, wbb.BackgroundBrowser(r'C:\Program Files\Google'
-                                                   r'\Chrome\Application'
-                                                   r'\chrome.exe'))
+    wbb.register('chrome', None, wbb.BackgroundBrowser(r'C:\Program Files\Google'
+                                                       r'\Chrome\Application'
+                                                       r'\chrome.exe'))
 
-morph = pymorphy2.MorphAnalyzer()
+    morph = pymorphy2.MorphAnalyzer()
 
-while stream.is_active():
-    try:
-        data = stream.read(4096)
-        if recognizer.AcceptWaveform(data):
-            ror = json.loads(recognizer.Result())["text"]
-            print(ror)
-            try:
-                if command_execution(ror):
+    while stream.is_active():
+        try:
+            data = stream.read(4096)
+            if recognizer.AcceptWaveform(data):
+                ror = json.loads(recognizer.Result())["text"]
+                print(ror)
+                try:
+                    if command_execution(ror):
+                        pass
+                    else:
+                        break
+
+                except IndexError:
                     pass
-                else:
-                    break
 
-            except IndexError:
-                pass
-
-    except KeyboardInterrupt:
-        stream.stop_stream()
-        stream.close()
-        cap.terminate()
-        break
+        except KeyboardInterrupt:
+            stream.stop_stream()
+            stream.close()
+            cap.terminate()
+            break
