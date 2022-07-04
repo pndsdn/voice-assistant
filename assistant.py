@@ -97,10 +97,10 @@ class Assistant(object):
                 return False
 
             if action == "найти":
-                if action_object in COMMANDS[action].keys():
+                if "в интернете" in action_object:
                     action_object = "в интернете"
-                    q = text[text.find(action_object) + len(
-                        action_object) + 1::]
+                    q = text[text.find(action_object) +
+                             len(action_object) + 1::]
                     os.system(f"python -m webbrowser -t "
                               f"https://www.google.com/search?q={q}")
                     self.play_assistant_replica(action, action_object)
@@ -181,4 +181,3 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         pass
-
