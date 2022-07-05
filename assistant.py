@@ -100,7 +100,7 @@ class Assistant(object):
                 if "в интернете" in action_object:
                     action_object = "в интернете"
                     q = text[text.find(action_object) +
-                             len(action_object) + 1::]
+                             len(action_object) + 1::].replace(" ", "%20")
                     os.system(f"python -m webbrowser -t "
                               f"https://www.google.com/search?q={q}")
                     self.play_assistant_replica(action, action_object)
@@ -129,10 +129,8 @@ class Assistant(object):
 
             if action == "разделить":
                 ext = extractor.NumberExtractor()
-                num1 = ext.replace_groups(text[len(text.split()[0]) + 1:])[
-                    0]
-                num2 = ext.replace_groups(text[len(text.split()[0]) + 1:])[
-                    1]
+                num1 = ext.replace_groups(text[len(text.split()[0]) + 1:])[0]
+                num2 = ext.replace_groups(text[len(text.split()[0]) + 1:])[1]
                 _frac = num1 / num2
                 self.play_assistant_replica(action, action_object)
 
